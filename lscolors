@@ -1,0 +1,82 @@
+#!/bin/bash 
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- #
+#                     Z A C H    B R A Y                      #
+#           C U S T O M    B A S H    P R O F I L E           #
+#            C R E A T E D    2 0 1 8 - 0 8 - 2 7             #
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- #
+## https://gitlab.nordstrom.com/Zach.Bray/bash_profile/blob/master/.bash_profile
+
+# allow coloring in terminal
+export CLICOLOR=1
+
+
+# ---- ---- ---- ---- ----  LS-BSD   ---- ---- ---- ---- ---- # 
+
+#   FORMAT [foreground color][background color]
+#   a = black    b = red        c = green    d = brown
+#   e = blue     f = magenta    g = cyan     x = default
+#   uppercase = bold
+
+LSCOLORS="gx"		# directory
+LSCOLORS+="Cx"		# symbolic link
+LSCOLORS+="Bx"		# socket
+LSCOLORS+="Dx"		# pipe
+LSCOLORS+="fx"		# executable
+LSCOLORS+="eg"		# block special
+LSCOLORS+="ed"		# character special
+LSCOLORS+="ab"		# executable with setuid
+LSCOLORS+="ag"		# executable with setgit
+LSCOLORS+="ac"		# dir writable by others, sticky bit
+LSCOLORS+="ad"		# dir writable by others, not sticky
+
+export LSCOLORS
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- #
+
+
+
+
+# ---- ---- ---- ---- ---- LS-LINUX  ---- ---- ---- ---- ---- #
+
+#   TEXT STYLES
+#   0 = default    1 = bold    4 = underline    5 = flashing
+
+#   COLOR FORMAT [type][color]
+#   TYPES
+#   3 = text color          9 = lighter text colors
+#   4 = background color   10 = lighter background color
+#   COLORS
+#   0 = black    1 = red      2 = green    3 = orange
+#   4 = blue     5 = purple   6 = cyan     7 = grey
+
+LS_COLORS="di=36:"		# directory
+LS_COLORS+="ln=1;35:"	# symbolic link
+LS_COLORS+="so=1;31:"	# socket
+LS_COLORS+="pi=1;33:"	# pipe
+LS_COLORS+="ex=35:"		# executable
+LS_COLORS+="bd=34;46:"	# block special
+LS_COLORS+="cd=34;43:"	# character speical
+LS_COLORS+="su=30;41:"	# file with setuid
+LS_COLORS+="sg=30;46:"	# file with setgid
+LS_COLORS+="tw=30;42:"	# dir writable by others, sticky bit
+LS_COLORS+="ow=30;43"	# dir writable by others, not sticky
+
+export LS_COLORS
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- #
+
+
+
+
+# ---- ---- ---- ---- ---- ALIASSES  ---- ---- ---- ---- ---- #
+
+# ls with colors
+if [[ "$OSTYPE" == "linux-gnu" ]]; then 	# linux
+	alias ls="ls --color=always"
+elif [[ "$OSTYPE" == "darwin"* ]]; then		# mac
+	alias ls="ls -GFh"
+fi
+
+# show all details
+alias ll="ls -la"
