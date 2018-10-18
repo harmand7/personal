@@ -2,16 +2,16 @@
 # author: harman dhunna
 # local mac .bash_profile
 
-function title() {
-    if [ "$1" ]
-    then
-        unset PROMPT_COMMAND
-        echo -ne "\033]0;${*}\007"
-    else
-        export PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'
-    fi
-}
-title
+# function title() {
+#     if [ "$1" ]
+#     then
+#         unset PROMPT_COMMAND
+#         echo -ne "\033]0;${*}\007"
+#     else
+#         export PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'
+#     fi
+# }
+# title
 
 function slack(){
     echo "Opening Nordstrom.slack"
@@ -25,7 +25,6 @@ function mkcd() {
 }
 
 
-###########################################################
 #----------Amazon env variables----------------------------
 export AWS_DEFAULT_REGION="us-west-2"
 export AWS_PROFILE="nordstrom-federated"
@@ -58,8 +57,11 @@ alias vgs='vagrant global-status'
 alias sbp='subl ~/profile/bash_profile'
 alias dal='dawslogin'
 alias galias='git config --get-regexp alias'
-#-----------END-----------
+alias giturl='git config --get remote.origin.url'
+alias topc='top -o cpu'
+#----------- END -----------
 
+#----------- CHEF Kitchen -----------
 function list_kitchen() {
     echo   $'\tkl = kitchen list
     \tkt    = kitchen test $@
@@ -125,7 +127,12 @@ function rc() {
     rubocop $@
 }
 
-######DOCKER SHORT CUTS ##########
+function kns() {
+    knife node show $1.nordstrom.net
+}
+#----------- END -----------
+
+#----------- Docker Shortcuts -----------
 function dexec() {
     if [[ $# -ne 2 ]]; then
         echo "Please enter container name and command."
@@ -165,11 +172,13 @@ function dawslogin() {
         echo 'Logged into aws ecs docker registry.'
     fi
 }
+#----------- END -----------
 
+#-----------Sherlock Shortcuts-----------
 function sherlock_lan() {
     user_not_found='User not found'
     user=$1
-    ldap_search_coomand='ldapsearch -x -W -D"CN=Dhunna\\, Harman,OU=Users,OU=Accounts,DC=nordstrom,DC=net" -H ldaps://10.1.82.144:636 -b"dc=nordstrom,dc=net" -s sub "(&(objectClass=user)(samaccountname=$user))"'
+    # ldap_search_coomand='ldapsearch -x -W -D"CN=Dhunna\\, Harman,OU=Users,OU=Accounts,DC=nordstrom,DC=net" -H ldaps://10.1.82.144:636 -b"dc=nordstrom,dc=net" -s sub "(&(objectClass=user)(samaccountname=$user))"'
     if [[ $# -ne 1 ]]; then
         echo "Please enter user 4 letter lan id only."
     else
@@ -180,10 +189,6 @@ function sherlock_lan() {
         # fi
         echo $result  | jq '.'
     fi
-}
-
-function getTeamID() {
-    ruby ~/profile/getTeamLANID.rb
 }
 
 function sherlock_name() {
@@ -219,6 +224,13 @@ function sherlock_group() {
     fi
 }
 
+#----------- END -----------
+
+
+function getTeamID() {
+    ruby ~/profile/getTeamLANID.rb
+}
+
 function hgrep() {
 	history | grep $1
 }
@@ -232,18 +244,27 @@ function lazygit() {
     git status
 }
 
+#----------- END -----------
+
+
 #-------Crypto tools------
 #source ~/bin/java8-crypto-tools/install-crypto.sh
-#-----------END-----------
+#----------- END -----------
 
 HISTFILESIZE=10000000
 HISTSIZE=10000000
 
+
+export PATH=$PATH:$HOME/bin:\
+$HOME/bin/apache-maven-3.3.9/bin:\
+Documents/mongodb-osx-x86_64-enterprise-3.2.9/bin/:\
+/usr/local/go/bin:\
+/usr/bin/:\
+/Library/Frameworks/Python.framework/Versions/3.6/bin:\
+$HOME/.chefdk/gem/ruby/current\
+$HOME/.rvm/bin
+
 source ~/profile/lscolors
-
-export PATH=$PATH:/Users/aexd/bin:/Users/aexd/bin/apache-maven-3.3.9/bin:Documents/mongodb-osx-x86_64-enterprise-3.2.9/bin/:/usr/local/go/bin:/usr/bin/:/Library/Frameworks/Python.framework/Versions/3.6/bin:/Users/aexd/.chefdk/gem/ruby/current
-
-
 source ~/.git-prompt.sh
 
 function color_my_prompt() {
@@ -254,6 +275,8 @@ function color_my_prompt() {
     local __prompt_tail="\[\033[35m\]$"
     local __last_color="\[\033[00m\]"
     export PS1="$__user_and_host $__cur_location $__git_branch_color$__git_branch\n$__prompt_tail$__last_color "
+    PS2="  \[\e[31m\]└─>\[\e[m\] "
+    export PS2
 }
 color_my_prompt
 
@@ -265,14 +288,23 @@ export DOCKER_HOST=unix:///var/run/docker.sock
 # when java is updated set the path
 export JDK_VERSION=`java -version 2>&1 |grep java | cut -f2 -d'"'`
 export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk${JDK_VERSION}.jdk/Contents/Home"
-#-----------END-----------
+#----------- END -----------
 
 #------bash_completion----
 if [ -f /Users/aexd/.git-completion.bash ]; then
     . /Users/aexd/.git-completion.bash
 fi
-#-----------END-----------
+#----------- END -----------
 
+# GIT_PROMPT_ONLY_IN_REPO=1
+# source ~/profile/bash-git-prompt/gitprompt.sh
+
+# PERL Paths
+PATH="/Users/aexd/perl5/bin${PATH:+:${PATH}}"; export PATH;
+PERL5LIB="/Users/aexd/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="/Users/aexd/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"/Users/aexd/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=/Users/aexd/perl5"; export PERL_MM_OPT;
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 
