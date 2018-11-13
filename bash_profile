@@ -46,7 +46,7 @@ alias subl='/Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl'
 alias openJ='open /Applications/IntelliJ\ IDEA.app/'
 alias goide='open /Applications/Gogland\ 1.0\ EAP.app/'
 alias gitup="open /Applications/GitUp.app/"
-alias sb="source ~/profile/bash_profile"
+alias sb="sb"
 alias resetgit='echo "moving idea directory" && mv .idea ../ && echo "resetting and cleaning" && git reset --hard && git clean -f -d && echo "returning idea" && mv ../.idea .'
 alias kec='echo -e "                               development  test        staging    prod4      prod3      prod2      production";knife environment compare development test staging prod4 prod3 prod2 production | grep $1'
 alias switch_chefdk='ruby ~/code/switch_ruby/switch_chef.rb'
@@ -54,11 +54,14 @@ alias kl='kitchen list'
 alias lk='list_kitchen'
 alias kr='kd && kco && kv'
 alias vgs='vagrant global-status'
-alias sbp='subl ~/profile/bash_profile'
+alias sbp='subl ~/personal/bash_profile'
 alias dal='dawslogin'
 alias galias='git config --get-regexp alias'
 alias giturl='git config --get remote.origin.url'
 alias topc='top -o cpu'
+
+alias dt='dockertest'
+alias ct='containerTest'
 #----------- END -----------
 
 #----------- CHEF Kitchen -----------
@@ -73,6 +76,11 @@ function list_kitchen() {
     \tvd    = vagrant destroy $@
     \tvgs   = vagrant global-status
     \tvdall = vgs | grep default | cut -d ' ' -f1 | xargs -L 1 vagrant destroy -f $1'
+}
+
+function sb() {
+    source ~/personal/bash_profile
+    source ~/.bash_profile 
 }
 
 function vdall() {
@@ -133,6 +141,33 @@ function kns() {
 #----------- END -----------
 
 #----------- Docker Shortcuts -----------
+
+function dockertest(){
+    dkillall
+    docker build -t datadog_bigip .
+    docker run -d -v /var/run/docker.sock:/var/run/docker.sock:ro \
+              -v /proc/:/host/proc/:ro \
+              -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \
+              -e DD_API_KEY=e3304acd3aa1d64b7252f65a0ad8449c \
+              datadog_bigip:latest
+    # echo "Sleep 1"
+    # sleep 1
+    # echo "Sleep 2"
+    # sleep 1
+    # echo "Sleep 3"
+    # sleep 1
+    # containerTest
+}
+
+function containerTest(){
+    container=`docker ps | grep -e "$1" | cut -d ' ' -f1 | head -2 | tail -1`
+    docker exec -it $container /opt/datadog-agent/bin/agent/agent status
+}
+
+function dps(){
+    docker ps
+}
+
 function dexec() {
     if [[ $# -ne 2 ]]; then
         echo "Please enter container name and command."
@@ -145,17 +180,36 @@ function dexec() {
 
 function dssh() {
     if [[ $# -ne 1 ]]; then
-        echo "Please enter container name."
+        echo "Please enter container image name."
     else
         container=`docker ps | grep -e "$1" | cut -d ' ' -f1 | head -n 1`
-        echo "container name: $1 : CONTAINER ID: $container"
+        echo "container image name: $1 : CONTAINER ID: $container"
         docker exec -it $container /bin/bash
     fi
 }
 
-function dkill() {
-    docker ps | egrep -v -e 'jetbridge|IMAGE' | cut -d ' ' -f1 | xargs -L 1 docker stop $1
-    docker images | egrep -e 'none' | cut -d ' ' -f 3  
+function dsshl() {
+    container=`docker ps | head -n 2 | tail -1 | awk '{print $1}'`
+    name=`docker ps | head -n 2 | tail -1 | awk '{print $2}'`
+    echo "container image name: $name : CONTAINER ID: $container"
+    docker exec -it $container /bin/bash
+}
+
+function dkillexcept() {
+    filter="$1|IMAGE"
+
+    for container in $(docker ps | egrep -v -e $filter | cut -d ' ' -f1)
+    do
+        echo "Stopping container: $container"
+        docker stop $container
+    done
+    # xargs -L 1 docker stop $1 
+    # docker images | egrep -e 'none' | cut -d ' ' -f 3  
+}
+
+function dkillall() {
+    docker ps | egrep -v -e 'IMAGE' | cut -d ' ' -f1 | xargs -L 1 docker stop $1
+    # docker images | egrep -e 'none' | cut -d ' ' -f 3  
 }
 
 function dclean() {
@@ -228,7 +282,7 @@ function sherlock_group() {
 
 
 function getTeamID() {
-    ruby ~/profile/getTeamLANID.rb
+    ruby ~/personal/getTeamLANID.rb
 }
 
 function hgrep() {
@@ -243,6 +297,9 @@ function lazygit() {
     git push origin $current_branch
     git status
 }
+
+complete -W "$(echo `cat ~/.ssh/known_hosts | cut -f 1 -d ' ' | \
+    sed -e s/,.*//g | uniq | grep -v "\["`;)" ssh
 
 #----------- END -----------
 
@@ -264,21 +321,70 @@ Documents/mongodb-osx-x86_64-enterprise-3.2.9/bin/:\
 $HOME/.chefdk/gem/ruby/current\
 $HOME/.rvm/bin
 
-source ~/profile/lscolors
-source ~/.git-prompt.sh
+source ~/personal/lscolors
+source ~/personal/.git-prompt.sh
 
-function color_my_prompt() {
-    local __user_and_host="\[\033[01;32m\]\u@\h"
-    local __cur_location="\[\033[01;34m\]\w"
-    local __git_branch_color="\[\033[31m\]"
-    local __git_branch='$(__git_ps1 " (%s)")'
-    local __prompt_tail="\[\033[35m\]$"
-    local __last_color="\[\033[00m\]"
-    export PS1="$__user_and_host $__cur_location $__git_branch_color$__git_branch\n$__prompt_tail$__last_color "
-    PS2="  \[\e[31m\]└─>\[\e[m\] "
-    export PS2
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- #
+#                         P R O M P T                         #
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- #
+
+# function called every time the prompt needs to be rendered
+
+function emoji_to_hex(){
+    printf $1| hexdump -C | head -n 1 | cut -d' ' -f3 -f4 -f5 -f6 | sed -e 's/ /\\x/g'
 }
-color_my_prompt
+
+function prompt_command() {
+
+    # colors used in the prompt
+    local   CYAN="\[\033[0;36m\]"
+    local    RED="\[\033[0;31m\]"
+    local PURPLE="\[\033[0;35m\]"
+    local  GREEN="\[\033[0;32m\]"
+    local  RESET="\[\033[;0m\]"
+
+    local BRANCH
+    local BRANCH_COL=$GREEN
+    
+    # if a git repo, add the current branch
+    if git status &>/dev/null; then
+        if git status -uno -s | grep -q . ; then
+            BRANCH_COL=$RED
+        fi
+        BRANCH="[$(git branch | sed -n 's/* //p')] "
+    fi
+
+    PS1='$(if [[ $? == 0 ]]; then printf "\xf0\x9f\x8d\x91 "; else printf "\xf0\x9f\x8c\xb6  "; fi)\[\e[0m\]'
+
+    # username
+    PS1+="$RED\u"
+
+    # only show '@host' if it's not my local machine
+    if [[ "$HOSTNAME" != "M-C02X5A78JG5J"* ]]; then
+        PS1+="$CYAN@$GREEN\h"
+    fi
+    # :DIRECTORY_HEAD [branch] >
+    PS1+="$RED:$PURPLE\w $BRANCH_COL$BRANCH$RED> $RESET" 
+    export PS1
+
+    # local prmpt="$USER:${PWD##*/}"
+    # local prmpt_len=${#prmpt}
+
+    # local spaces=('%*s' "$prmpt_len" | tr ' ' "#")
+
+    # multiline commands
+    PS2="$spaces$RED ├─>$RESET "
+    export PS2
+
+}
+
+# run the function prompt_command when building prompt
+PROMPT_COMMAND='prompt_command'
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- #
+
+# GIT_PROMPT_ONLY_IN_REPO=1
+# source ~/personal/bash-git-prompt/gitprompt.sh
 
 
 #SET DOCKER HOST:
@@ -297,7 +403,7 @@ fi
 #----------- END -----------
 
 # GIT_PROMPT_ONLY_IN_REPO=1
-# source ~/profile/bash-git-prompt/gitprompt.sh
+# source ~/personal/bash-git-prompt/gitprompt.sh
 
 # PERL Paths
 PATH="/Users/aexd/perl5/bin${PATH:+:${PATH}}"; export PATH;
