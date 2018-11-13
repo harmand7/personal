@@ -228,6 +228,26 @@ function dawslogin() {
 }
 #----------- END -----------
 
+function encrpt() {
+    if [[ $# -lt 2 ]]; then
+        outfile=$1.encrpt
+    else
+        outfile=$2
+    fi
+    echo "Encrypting file [$1] into [$outfile]"
+    openssl aes-256-cbc -a -salt -in $1 -out $outfile
+}
+
+function decrypt() {
+    if [[ $# -lt 2 ]]; then
+        outfile=$1.decrypt
+    else
+        outfile=$2
+    fi
+    echo "Decrypting file [$1] into [$outfile]"
+    openssl aes-256-cbc -d -a -in $1 -out $outfile
+}
+
 #-----------Sherlock Shortcuts-----------
 function sherlock_lan() {
     user_not_found='User not found'
