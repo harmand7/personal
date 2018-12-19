@@ -13,6 +13,22 @@
 # }
 # title
 
+function getgitlabtoken() {
+    ruby <<EOF
+        puts File.readlines('/Users/aexd/personal/gitlab_personal_token').sample
+EOF
+}
+
+function pythoncode() {
+    python3 <<EOF
+print("hello harman, i am python")
+EOF
+}
+
+function pythoncode1() {
+    echo "print('hello harman, i am python')" | python3
+}
+
 function slack(){
     echo "Opening Nordstrom.slack"
     open -a "/Applications/Google Chrome.app" https://nordstrom.slack.com/
@@ -35,9 +51,6 @@ export GOPATH="/Users/aexd/code/go"
 
 #----------ALIAS----------
 alias http='which_http'
-alias sherlock_name='sherlock_name'
-alias sherlock_lan='sherlock_lan'
-alias sherlock_group='sherlock_group'
 alias gp='lazygit'
 alias hgrep='hgrep'
 alias egrep='/usr/bin/egrep --color=auto'
@@ -46,7 +59,6 @@ alias subl='/Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl'
 alias openJ='open /Applications/IntelliJ\ IDEA.app/'
 alias goide='open /Applications/Gogland\ 1.0\ EAP.app/'
 alias gitup="open /Applications/GitUp.app/"
-alias sb="sb"
 alias resetgit='echo "moving idea directory" && mv .idea ../ && echo "resetting and cleaning" && git reset --hard && git clean -f -d && echo "returning idea" && mv ../.idea .'
 alias kec='echo -e "                               development  test        staging    prod4      prod3      prod2      production";knife environment compare development test staging prod4 prod3 prod2 production | grep $1'
 alias switch_chefdk='ruby ~/code/switch_ruby/switch_chef.rb'
@@ -62,13 +74,14 @@ alias topc='top -o cpu'
 
 alias dt='dockertest'
 alias ct='containerTest'
+alias kc='kubectl'
 #----------- END -----------
 
 #----------- CHEF Kitchen -----------
 function list_kitchen() {
     echo   $'\tkl = kitchen list
     \tkt    = kitchen test $@
-    \tkc    = kitchen create $@
+    \tkcr   = kitchen create $@
     \tkco   = kitchen converge $@
     \tkv    = kitchen verify $@
     \tkd    = kitchen destroy $@
@@ -99,7 +112,7 @@ function kco() {
     kitchen converge $@
 }
 
-function kc() {
+function kcr() {
     kitchen create $@
 }
 
@@ -136,7 +149,7 @@ function rc() {
 }
 
 function kns() {
-    knife node show $1.nordstrom.net
+    knife node show $1.nordstrom.net $*
 }
 #----------- END -----------
 
@@ -161,7 +174,8 @@ function dockertest(){
 
 function containerTest(){
     container=`docker ps | grep -e "$1" | cut -d ' ' -f1 | head -2 | tail -1`
-    docker exec -it $container /opt/datadog-agent/bin/agent/agent status
+    docker exec -it $container ls -Rla /lib/datadog/mibs/mibs_f5
+    # docker exec -it $container /opt/datadog-agent/bin/agent/agent status
 }
 
 function dps(){
@@ -213,7 +227,7 @@ function dkillall() {
 }
 
 function dclean() {
-   docker images | awk /'none/ {print 3}' | xargs -L 1 docker image rm -f $1
+   docker images | awk /'none/ {print $3}' | xargs -L 1 docker image rm -f $1
 }
 
 function dawslogin() {
@@ -236,6 +250,10 @@ function encrpt() {
     fi
     echo "Encrypting file [$1] into [$outfile]"
     openssl aes-256-cbc -a -salt -in $1 -out $outfile
+}
+
+function cdu() {
+    cd ~/$1
 }
 
 function decrypt() {
@@ -318,6 +336,7 @@ function lazygit() {
     git status
 }
 
+# ssh auto complete. 
 complete -W "$(echo `cat ~/.ssh/known_hosts | cut -f 1 -d ' ' | \
     sed -e s/,.*//g | uniq | grep -v "\["`;)" ssh
 
